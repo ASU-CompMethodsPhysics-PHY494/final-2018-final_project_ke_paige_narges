@@ -1,7 +1,7 @@
 # Information on the Poster
 
 Present your work at the *Computational Methods in Physics Poster
-Session* on 05/05/2016 from 11:30am to 2pm in PSH 355.
+Session* on 05/04/2017 from 12:10pm to 3:15pm in PSH 355.
 
 * all team members need to attend
 * individual Q&A at poster will be part of your grade
