@@ -1,0 +1,456 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts,bm}
+\usepackage{graphicx}
+\newcommand{\Rey}{\mathit{Re}}
+\newcommand{\Ra}{\mathit{Ra}}
+\newcommand{\Ri}{\mathit{Ri}}
+\newcommand{\Gr}{\mathit{Gr}}
+\newcommand{\Pe}{\mathit{Pe}}
+\newcommand{\Nu}{\mathit{Nu}}
+\newcommand{\Ek}{\mathit{E}}
+\renewcommand{\Pr}{\mathit{Pr}}
+ 
+
+\begin{document}
+\title{Dynamics in a Stratified Lid-driven Cavity}
+\author{Paige Weisman,Narges Masoumi, Ke Wu}
+\maketitle
+ 
+\section{Problem Description}
+Consider the flow in a rectangular cavity of depth $d$ and width $l$,
+filled with a fluid of kinematic viscosity $\nu$, thermal diffusivity
+$\kappa$, and coefficient of volume expansion $\beta$. The top
+boundary of the cavity is driven horizontally at a constant speed $U$
+and is maintained at a fixed temperature $T_\text{top}$. The bottom
+boundary is maintained at a cooler fixed temperature $T_\text{bot}$,
+whilst the two sidewalls are insulated. Gravity $g$ acts in the
+downward vertical direction. The temperature deviation from the mean temperature,
+$(T_\text{top}+T_\text{bot})/2$, is non-dimensionalized with $\Delta
+T= T_\text{top}-T_\text{bot}$. Figure~\ref{schematic} shows a
+schematic of the system. Using $d$ as the length scale and the viscous
+time $d^2/\nu$ as the time scale, the non-dimensional governing
+equations, employing the Boussinesq approximation, are
+\begin{equation}  \label{goveq}
+  \begin{aligned}
+    \bm{u}_t+\bm{u}\cdot\nabla \bm{u} &= -\nabla p + \nabla^2\bm{u}
+    + \Gr\,T\bm{e}_y\,, \quad   \nabla\cdot\bm{u}=0\,,\\ 
+    T_t+\bm{u}\cdot\nabla T &= \frac{1}{\Pr} \nabla^2T\,.
+  \end{aligned}
+\end{equation}
+The boundary conditions are:
+\begin{equation}
+\begin{aligned}
+ & \text{top,    }  (x,y)=(x,0.5):       &&  (u,v,T)=(\Rey,0,0.5), \\
+ & \text{bottom, }  (x,y)=(x,-0.5):      &&  (u,v,T)=(0,0,-0.5),\\
+ & \text{sides,  }  (x,y)=(\pm0.5\gamma,y): &&  (u,v,T_x)=(0,0,0),
+\end{aligned}
+\end{equation}
+where $\gamma=l/d$ is the aspect ratio, $\Gr=\Ri \Rey^{2}$, $\Pr$ is the Prandtl number,
+$\Gr$ is the Grashof number and $\Ri$ is the Richardson number, which controls
+the intensity of the buoyancy force. The global energy is used to
+quantify the flow dynamics inside the cavity, which is defined as 
+\begin{equation} \label{Ek}
+\Ek = \frac{1}{\Rey^{2}}\int_{y=-0.5}^{y=0.5}\int_{x=-0.5}^{x=0.5}
+(u^{2}+v^{2})dxdy\,.
+\end{equation}
+
+
+\begin{figure}[t]
+\centering{\includegraphics[width=0.85\linewidth]{D2cavity_Schematics}}
+\caption{Schematic of the system, indicating the non-dimensional
+         coordinate system and boundary conditions. The top boundary moves to
+         the right (positive $x$ direction) at constant speed $\Rey$. The
+         colour map shows the linearly stratified temperature distribution
+         (red is $T=0.5$, blue is $T=-0.5$, and white is $T=0$) when
+         $\Rey=0$.}
+\label{schematic}
+\end{figure}
+
+\section{Approach}
+The governing equations \eqref{goveq} are discretized using a
+spectral-collocation method in both spatial directions, which is
+proposed by \cite{HuRa98}. Both velocity
+components and pressure are approximated by Chebyshev polynomials of
+the first kind with degree less than $M$, associated with the
+Chebyshev--Gauss--Lobatto grid. Spatial differentiation is performed
+via direct matrix-vector multiplication by the pseudo-spectral
+differentiation matrix.
+\noindent
+The boundary condition for the $x$-velocity at the moving top wall,
+$u(x,0.5)=\Rey$, is discontinuous where it meets the two vertical
+sidewalls, which can lead to Gibbs phenomena when using a global
+spectral method. In order to resolve this numerical issue, we
+regularise the top wall boundary condition by using:
+\begin{equation}
+u(x,0.5) = \Rey\left[1-\exp{(-(1-4x^{2})/\delta)}\right].
+\end{equation} 
+
+\section{Objective}
+In this project, we are going to fix the $\Rey = 2750$ and vary $Ri$
+numbers.For small $Ri$ values, the flow will be steady state with
+respect to time, but as we increase $Ri$ number, the flow inside the square cavity
+is expected to lose its stability and become periodic or even
+quasi-periodic. If we further increase $Ri$ number, the flow is expected
+to become steady flow again this is due to the buoyancy force is the
+dominant force which controls the flow dynamics. As we vary the
+parameter $Ri$, the flow dynamics will change dramatically, there are
+different types of bifurcations might occur, therefore, the numerical 
+simulations not only can help us identify the different states of flow, 
+but also can give us enough information that we can classify the bifurcations of the
+flow as we increase the parameter $Ri$ number. The specific tasks are
+following:
+\begin{itemize}
+\item{The code will be tested without tempture stratification, there are 
+  many known solution for $2D$ lid driven cavity problem.}
+\item{with $\bm{u}=0$ initial condition, simulate the flow for $Ri\in
+  [0.1,2]$ with increment of $\Delta Ri=0.1$. For single case, record
+  the energy time series for each time step.} 
+\item{Use the solutions obtained in the previous step as initial
+  conditions, do a refinement. Use $\Delta Ri=0.01$, in total there will
+  be $190$ cases.}
+\item{Compute the FFT for each time series, and plot the power spectal
+  density diagram.}
+\item{Use the power spectal density plot to find the critical $Ri$ where 
+  bifurcations occur, and make the bifurcation diagram, which will be
+  quantified by global energy.}
+\item{For different flow states, make a $2D$ plot for a steady state
+  solution, a movie for a limit cycle solution.}
+\end{itemize}
+
+\section{Appendix}
+A pseudospectal collocation-Chebyshev method is implemented, each variable is expanded 
+in the approximation space $P_{MN}$, composed of Chebyshev polynomials, 
+$T_{m}$ and $T_{n}$ of degrees less or equal than $M$ and $N$ in $x, y$ directions.
+
+\begin{equation}
+T(x,y) =
+  \sum_{m=0}^{M}\sum_{n=0}^{N}\hat{T}_{mn}T_{m}(2x)T_{n}(2y)
+\end{equation}
+
+\begin{equation}
+u(x,y) = 
+  \sum_{m=0}^{M}\sum_{n=0}^{M}\hat{u}_{mn}T_{m}(2x)T_{n}(2y)
+\end{equation}
+
+\begin{equation}
+v(x,y) = 
+  \sum_{m=0}^{M}\sum_{n=0}^{N}\hat{v}_{mn}T_{m}(2x)T_{n}(2y)
+\end{equation}
+
+\begin{equation}
+p(x,y) = 
+  \sum_{m=0}^{M}\sum_{n=0}^{M}\hat{p}_{mn}T_{m}(2x)T_{n}(2y)
+\end{equation}
+
+All the partial derivatives are evaluated directly by the Chebyshev differentiation matrix. 
+Since the computational domain is $[-1/2,-1/2]^{2}$, when we take partial derivatives 
+by use Chebyshev differentiation matrix $D$, we need to use chain rule, for instance
+\begin{equation}
+\frac{\partial u}{\partial x} = 2Du
+\end{equation}
+
+\begin{equation}
+\frac{\partial^{2} u}{\partial x^{2}} = 4D^{2}u
+\end{equation}
+
+Since we use the Chebyshev collocation method, so all the values are directly 
+evaluated at the Chebyshev-Gauss-Lobatto collocation points. Also note that since 
+the aspect ratio we choose is 1, so there is a factor of 2 when we take the first 
+partial derivative, and there is a factor of 4 when we take the second partial derivative.\\
+
+Temporal scheme:\\
+\begin{equation}
+\frac{3\vec{u}^{n+1} - 4\vec{u}^{n} + \vec{u}^{n-1}}{2\delta t} =
+- \nabla p^{n+1} - 2NL(\vec{u}^{n})
++ NL(\vec{u}^{n-1}) - \triangle \vec{u}^{n+1} + GrT^{n+1}\vec{e}_{y} 
+\end{equation}
+
+\begin{equation}
+\frac{3T^{n+1} - 4T^{n}+T^{n-1}}{2\delta t} =
+- 2NL(\vec{u}^{n},T^{n})
++  NL(\vec{u}^{n-1},T^{n-1}) + \frac{1}{Pr} \triangle T^{n+1}
+\end{equation}
+
+The time integration used is second order accurate and is based on a combination 
+of Adams-Bashforth and backward differentiation formula (AB2/BDF) schemes.\\
+In order to improve the stability, the viscous term need to be written as
+
+\begin{equation}
+L(\vec{u})=\Delta \vec{u} = 
+ \nabla(\nabla \cdot \vec{u})-\nabla \times (\nabla \times \vec{u})=
+-\nabla \times (\nabla \times \vec{u})
+\end{equation}
+
+which is due to divergence free.\\
+\\
+\centerline{Code Implementation}
+Every quantity is evaluated directly on the Chebyshev-Gauss-Lobatto grid points, 
+Let DX,DY denote the Chebyshev differentiation matrix with dimension $(M+1) \times (N+1)$, 
+and use $i,j$ to denote the indices start from 0 to $M$ and $N$ respectively. 
+In our code, define $U(0:M,0:N)$, $V(0:M,0:N)$,$T(0:M,0:N)$, $P(0:M,0:N)$ 
+as the velocity, 
+temperature and pressure variables, $NLu(0:M,0:N)$, $NLv(0:M,0:N)$ as the nonlinear
+terms in momentum equation,
+and Define $NLT(0:M,0:N)$ as the nonlinear terms in temperature equation, 
+$Lu(0:M,0:N)$, $Lv(0:M,0:N)$ as the viscous terms in the momentum equation. 
+So these nonlinear terms can be computed as following:
+let $asp = 2$
+\begin{align}
+NLu = u\frac{\partial u}{\partial x} + v\frac{\partial u}{\partial y}
+=asp*U * DXU + 2V * UDY^{T}
+\\
+NLv = u\frac{\partial v}{\partial x} + v\frac{\partial v}{\partial y}
+=asp*U*DXV + 2V*VDY^{T}
+\\
+NLT = u\frac{\partial T}{\partial x} + v\frac{\partial T}{\partial y}
+=asp*U*DXT + 2V*TDY^{T}
+\\
+Lu  = \frac{\partial ^2u}{\partial y^{2}} - \frac{\partial ^2v}{\partial y\partial x}
+=4\{U(DY^{2})^{T}\} - 2*asp*\{(DXV)DY^{T}\}
+\\
+Lv  = \frac{\partial ^2v}{\partial x^{2}} - \frac{\partial ^2u}{\partial x\partial y}
+=asp^{2}*\{(DX^{2}V)\} - asp*2*\{DX(UDY^{T})\}
+\end{align}
+\textbf{The Improved Projection Scheme:}
+
+\begin{description}
+\item[step 1:] compute the temperature $T^{n+1}$ from temperature equation\\
+\begin{equation}
+(\Delta -\frac{3Pr}{2\delta t}) T^{n+1} = Pr \{ 2NL(\vec{u}^{n},T^{n}) 
+- NL(\vec{u}^{n-1},T^{n-1}) - \frac{4T^{n}-T^{n-1}}{2\delta t} \}
+\end{equation}
+
+with boundary conditions: \\
+  $ T(x, 1/2) = 0.5$,
+  $ T(x,-1/2) =-0.5$,
+  $ \frac{\partial T}{\partial n}(-1/2,y) = 0 $,
+  $ \frac{\partial T}{\partial n}( 1/2,y) = 0 $.
+
+Formulation of the linear systems:\\
+The indices $i,j$ are in the sets $\{0,1,2,...M\}$ and $\{ 0,1,2,...,N\}$ respectively.
+\begin{align}
+  \frac{\partial^{2} T^{n+1}}{\partial x^{2}}
+ +\frac{\partial^{2} T^{n+1}}{\partial y^{2}}
+ -\frac{3Pr}{2\delta t}T^{n+1}  = RHS \\
+RHS = Pr \{ 2NL(\vec{u}^{n},T^{n}) - NL(\vec{u}^{n-1},T^{n-1}) 
+  - \frac{4T^{n}-T^{n-1}}{2\delta t} \}
+\end{align}
+
+\begin{multline}
+  asp^{2}\sum_{k=0}^{M}DX^{2}_{i,k}T_{k,j}^{n+1} +
+  4\sum_{k=0}^{N}T_{i,k}^{n+1}(DY^{2})^{T}
+  - \frac{3Pr}{2\delta t}T_{i,j}^{n+1} = RHS_{i,j}\\
+  asp^{2}\sum_{k=1}^{M-1}DX^{2}_{i,k}T_{k,j}^{n+1}  
+ +asp^{2}*DX^{2}_{i,0}T_{0,j}^{n+1} 
+ +asp^{2}*DX^{2}_{i,M}T_{M,j}^{n+1}+\\
+  4\sum_{k=1}^{N+1}T_{i,k}^{n+1}(DY^{2})^{T}_{k,j}
+  +4T_{i,0}^{n+1}(DY^{2})^{T}_{0,j}
+  +4T_{i,N}^{n+1}(DY^{2})^{T}_{N,j}
+  -\frac{3Pr}{2\delta t}T_{i,j}^{n+1} = RHS_{i,j}
+\end{multline}
+
+\begin{equation}
+  T_{0,j}^{n+1} =
+-\sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
+  {DX_{00}DX_{MM}-DX_{M0}DX_{0M}} T_{k,j}^{n+1}
+\end{equation}
+
+\begin{equation}
+  T_{M,j}^{n+1} =
+-\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
+  {DX_{M0}DX_{0M}-DX_{00}DX_{MM}} T_{k,j}^{n+1}
+\end{equation}
+
+Note that the left and right temperature values at boundary points are expressed as 
+a linear combination of interior points. Plug $T_{0,j},T_{M,j}$ into the linear equation, 
+we obtain the following linear system:\\
+\begin{multline}
+  asp^{2}\sum_{k=1}^{M-1}DX^{2}_{i,k}T_{k,j}^{n+1}
+-asp^{2}*DX^{2}_{i,0}\sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
+  {DX_{00}DX_{MM}-DX_{M0}DX_{0M}} T_{k,j}^{n+1}\\
+-asp^{2}*DX^{2}_{i,M}\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
+  {DX_{M0}DX_{0M}-DX_{00}DX_{MM}} T_{k,j}^{n+1}
+  +4\sum_{k=1}^{N-1}T_{i,k}^{n+1}(DY^{2})^{T}_{k,j}
+  -\frac{3Pr}{2\delta t}T_{i,j}^{n+1} \\
+  =RHS_{i,j} -4T_{i,0}^{n+1}(DY^{2})^{T}_{0,j} -
+  4T_{i,N}^{n+1}(DY^{2})^{T}_{N,j}
+\end{multline}
+where the indices $i,j$ start from $\{1,2,3,...M-1\}$ and
+$\{1,2,3,...,N-1\}$.
+
+\item[step 2:] compute the preliminary presssure $P^{*}$\\
+\begin{equation}
+\triangle {p}^{*} = \nabla \cdot  \{-2NL(\vec{u}^{n}) + NL(\vec{u}^{n-1}) + GrT^{n+1}\vec{e}_{y} \}
+\end{equation}
+ with boundary conditions:\\
+\begin{equation}
+\frac{\partial {p}^{*}}{\partial{n}}= \vec{n} \cdot \{\frac{-3\vec{w}+4\vec{u}^{n}-\vec{u}^{n-1}}{2\delta t}
+      -2NL(\vec{u}^{n}) + NL(\vec{u}^{n-1}) + GrT^{n+1}\vec{e}_{y} + 2L(\vec{u}^{n})-L(\vec{u}^{n-1}) \}
+\end{equation}
+where $\vec{w}$ is the boundary conditions of the velocity field.\\
+Formation of the linear system:
+\begin{equation}
+asp^{2}\sum_{k=0}^{M}DX^{2}_{i,k}P^{*}_{k,j} + 4\sum_{k=0}^{N}P^{*}_{i,k}(DY^{2})^{T}_{k,j}
+= RHS_{i,j}\\
+\end{equation}
+
+\begin{equation}
+RHS = asp*DX\{-2NL(u^{n}+NL(u^{n-1}) \}
++2\{-2NL(v^{n})+NL(v^{n-1})+GrT^{n+1} \} DY^{T}
+\end{equation}
+
+\begin{align}
+  asp^{2}\sum_{k=1}^{M-1}DX^{2}_{i,k}P^{*}_{k,j}
++ asp^{2}*DX^{2}_{i,0}P^{*}_{0,j}+asp^{2}*DX^{2}_{i,M}P^{*}_{M,j}\\
++ 4\sum_{k=1}^{N-1}P^{*}_{i,k}(DY^{2})^{T}_{k,j}
++ 4P^{*}_{i,0}(DY^{2})^{T}_{0,j}
++ 4P^{*}_{i,N}(DY^{2})^{T}_{N,j}
+= RHS_{i,j}\\
+\end{align}
+\begin{align}
+P^{*}_{0,j} =
+\frac{\frac{1}{asp}rhs1_{0,j}DX_{MM}-\frac{1}{asp} rhs1_{M,j}DX_{0M}}{DX_{00}DX_{MM}-DX_{0M}DX_{M0}}
+-\sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
+{DX_{00}DX_{MM}-DX_{M0}DX_{0M}} P^{*}_{k,j}\\
+P^{*}_{M,j} =
+\frac{\frac{1}{asp} rhs1_{0,j}DX_{M0}-\frac{1}{asp}rhs1_{M,j}DX_{00}}{DX_{M0}DX_{0M}-DX_{00}DX_{MM}}
+-\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
+{DX_{M0}DX_{0M}-DX_{00}DX_{MM}} P^{*}_{k,j}\\
+P^{*}_{i,0} =
+\frac{\frac{1}{2}rhs2_{i,0}DY^{T}_{NN}-\frac{1}{2} rhs2_{i,N}DY^{T}_{N0}}{DY^{T}_{00}DY^{T}_{NN}-DY^{T}_{0N}DY^{T}_{N0}}
+-\sum_{k=1}^{N-1}P^{*}_{i,k}\frac{DY^{T}_{NN}DY^{T}_{k0}-DY^{T}_{N0}DY^{T}_{kN}}
+{DY^{T}_{00}DY^{T}_{NN}-DY^{T}_{0N}DY^{T}_{N0}} \\
+P^{*}_{i,N} =
+\frac{\frac{1}{2}rhs2_{i,0}DY^{T}_{0N}-\frac{1}{2} rhs2_{i,N}DY^{T}_{00}}{DY^{T}_{0N}DY^{T}_{N0}-DY^{T}_{00}DY^{T}_{NN}}
+-\sum_{k=1}^{N-1}P^{*}_{i,k}\frac{DY^{T}_{0N}DY^{T}_{k0}-DY^{T}_{00}DY^{T}_{kN}}
+{DY^{T}_{0N}DY^{T}_{N0}-DY^{T}_{00}DY^{T}_{NN}}
+\end{align}
+
+Plug the boundary $P^{*}$  values into the poisson equation, the linear system can be written as following:\\
+\begin{align}
+asp^{2}\sum_{k=1}^{M-1}DX^{2}_{i,k}P^{*}_{k,j}
+-asp^{2}DX^{2}_{i,0} \sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
+{DX_{00}DX_{MM}-DX_{M0}DX_{0M}} P^{*}_{k,j}\\
+-asp^{2}DX^{2}_{i,M}\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
+{DX_{M0}DX_{0M}-DX_{00}DX_{MM}} P^{*}_{k,j}\\
++4\sum_{k=1}^{N-1}P^{*}_{i,k}(DY^{2})^{T}_{k,j}
+-4\sum_{k=1}^{N-1}P^{*}_{i,k}\frac{DY^{T}_{NN}DY^{T}_{k0}-DY^{T}_{N0}DY^{T}_{kN}}
+{DY^{T}_{00}DY^{T}_{NN}-DY^{T}_{0N}DY^{T}_{N0}}(DY^{2})^{T}_{0,j}\\
+-4\sum_{k=1}^{N-1}P^{*}_{i,k}\frac{DY^{T}_{0N}DY^{T}_{k0}-DY^{T}_{00}DY^{T}_{kN}}
+{DY^{T}_{0N}DY^{T}_{N0}-DY^{T}_{00}DY^{T}_{NN}}(DY^{2})^{T}_{N,j}\\
+= RHS_{i,j}-asp*DX^{2}_{i,0}\frac{rhs1_{0,j}DX_{MM} - rhs1_{M,j}DX_{0M}}{DX_{00}DX_{MM}-DX_{0M}DX_{M0}}\\
+-asp*DX^{2}_{i,M}\frac{rhs1_{0,j}DX_{M0}-rhs1_{M,j}DX_{00}}{DX_{M0}DX_{0M}-DX_{00}DX_{MM}}\\
+-2*(DY^{2})^{T}_{0,j}\frac{rhs2_{i,0}DY^{T}_{NN}- rhs2_{i,N}DY^{T}_{N0}}{DY^{T}_{00}DY^{T}_{NN}-DY^{T}_{0N}DY^{T}_{N0}}\\
+-2*(DY^{2})^{T}_{N,j}\frac{rhs2_{i,0}DY^{T}_{0N}- rhs2_{i,N}DY^{T}_{00}}{DY^{T}_{0N}DY^{T}_{N0}-DY^{T}_{00}DY^{T}_{NN}}
+\end{align}
+
+
+\item[step 3:] compute the predictor velocity field $\vec{u}^{*}$ from the momentum equation
+\begin{equation}
+\frac{3\vec{u}^{*}-4\vec{u}^{n}+\vec{u}^{n-1}}{2\delta t} +2NL(\vec{u}^{n})-NL(\vec{u}^{n-1})
+  =-\nabla p^{*}+\Delta \vec{u}^{*}+GrT^{n+1}\hat{e}_{y}
+\end{equation}
+Re-write the above equation and group all the $\vec{u}^{*}$ terms.
+\begin{equation}
+(\Delta -\frac{3}{2\delta t})\vec{u}^{*}= \nabla p^{*} + 2NL(\vec{u}^{n}) - NL(\vec{u}^{n-1}) 
+  -GrT^{n+1}\vec{e}_{y} - \frac{4\vec{u}^{n}-\vec{u}^{n-1}}{2\delta t}
+\end{equation}
+with prescribed Dirichlet boundary conditions. Write the above equation in component form $\vec{u}=(u,v)$.\\
+\begin{equation}
+asp^{2}\sum_{k=0}^{M}DX^{2}_{i,k}u^{*}_{k,j} + 4\sum_{k=0}^{N}u^{*}_{i,k}(DY^{2})^{T}_{k,j}
+-\frac{3}{2\delta t}u^{*}_{i,j}= RHS1_{i,j}\\
+\end{equation}
+\begin{equation}
+asp^{2}\sum_{k=0}^{M}DX^{2}_{i,k}v^{*}_{k,j} + 4\sum_{k=0}^{N}v^{*}_{i,k}(DY^{2})^{T}_{k,j}
+-\frac{3}{2\delta t}v^{*}_{i,j}= RHS2_{i,j}\\
+\end{equation}
+\begin{align}
+RHS1 = \{ \frac{\partial p^{*}}{\partial x} +2NL(u^{n})-NL(u^{n-1})-
+  \frac{4u^{n}-u^{n-1}}{2\delta t} -F^{n+1}_{x}  \}\\
+= \{ asp*DXP^{*} +2NLU-NLUold-\frac{4U-Uold}{2\delta t} \}_{i,j}\\
+RHS2 = \{ \frac{\partial p^{*}}{\partial y} +2NL(v^{n})-NL(v^{n-1})-
+  \frac{4v^{n}-v^{n-1}}{2\delta t} -F^{n+1}_{y} -GrT^{n+1} \}\\
+= \{ 2P^{*}(DY)^{T} +2NLV-NLVold-\frac{4V-Vold}{2\delta t} -GrT^{n+1} \}
+\end{align}
+In this step we impose the exact boundary values for the velocity components, 
+and then reduce the system as $M-1$ by $N-1$ linear system.
+\begin{multline}
+\sum_{k=1}^{M-1}DX^{2}_{i,k}u^{*}_{k,j} + \sum_{k=1}^{N-1}u^{*}_{i,k}(DY^{2})^{T}_{k,j}
+-\frac{3}{2\delta t}u^{*}_{i,j}\\
+= RHS1_{i,j}-asp^{2}DX^{2}_{i,0}W_{0,j}-asp^{2}DX^{2}_{i,M}W_{M,j}
+-4W_{i,0}(DY^{2})^{T}_{0,j}-4W_{i,N}(DY^{2})^{T}_{N,j}
+\end{multline}
+\begin{multline}
+\sum_{k=1}^{M-1}DX^{2}_{i,k}v^{*}_{k,j} + \sum_{k=1}^{N-1}v^{*}_{i,k}(DY^{2})^{T}_{k,j}
+-\frac{3}{2\delta t}v^{*}_{i,j}\\
+= RHS2_{i,j}-asp^{2}DX^{2}_{i,0}W_{0,j}-asp^{2}DX^{2}_{i,M}W_{M,j}
+-4W_{i,0}(DY^{2})^{T}_{0,j}-4W_{i,N}(DY^{2})^{T}_{N,j}\\
+\end{multline}
+
+\item[step 4:] correct the preliminary pressure and preliminary velocity through 
+evaluating an intermediate variable $\phi$:\\
+
+\begin{equation}
+\frac{3\vec{u}^{n+1}-3\vec{u}^{*}}{2\delta t} = -\nabla (p^{n+1}-{p}^{*})
+\end{equation}
+Apply the continuity equation and define the intermediate variable $\phi$ as $\phi 
+= \frac{2\delta t}{3}(p^{n+1}-{p}^{*})$, we obtain following equation:\\
+\begin{equation}
+\Delta \phi = \nabla \cdot \vec{u}^{*}
+\end{equation}
+with pure Neumann boundary condition:\\
+
+\begin{equation}
+\frac{\partial \phi}{\partial n} =0
+\end{equation}
+
+\begin{align}
+RHS = \frac{\partial u^{*}}{\partial x} + \frac{\partial v^{*}}{\partial y}\\
+RHS = (2DXU^{*} + 2V^{*}(DY)^{T})
+\end{align}
+
+\begin{equation}
+4\sum_{k=0}^{M}DX^{2}_{i,k}\phi_{k,j} + 4\sum_{k=0}^{N}\phi_{i,k}(DY^{2})^{T}_{k,j}= RHS_{i,j}
+\end{equation}
+Express the boundary values of $\phi$ in terms interior points values by the Neumann boundary condition.\\
+\begin{align}
+\phi_{0,j} = 
+-\sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
+{DX_{00}DX_{MM}-DX_{M0}DX_{0M}} \phi_{k,j}\\
+\phi_{M,j} = 
+-\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
+{DX_{M0}DX_{0M}-DX_{00}DX_{MM}} \phi_{k,j}\\
+\phi_{i,0} = 
+-\sum_{k=1}^{N-1}\phi_{i,k}\frac{DY^{T}_{NN}DY^{T}_{k0}-DY^{T}_{N0}DY^{T}_{kN}}
+{DY^{T}_{00}DY^{T}_{NN}-DY^{T}_{0N}DY^{T}_{N0}} \\
+\phi_{i,N} = 
+-\sum_{k=1}^{N-1}\phi_{i,k}\frac{DY^{T}_{0N}DY^{T}_{k0}-DY^{T}_{00}DY^{T}_{kN}}
+{DY^{T}_{0N}DY^{T}_{N0}-DY^{T}_{00}DY^{T}_{NN}}
+\end{align}
+Plug in the boundary condition into the above equation, we can form the linear system for the $\phi$ equation.
+\begin{align}
+\sum_{k=1}^{M-1}DX^{2}_{i,k}\phi_{k,j}
++DX^{2}_{i,0}\sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
+{DX_{00}DX_{MM}-DX_{M0}DX_{0M}} \phi_{k,j} \\
++DX^{2}_{i,M}\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
+{DX_{M0}DX_{0M}-DX_{00}DX_{MM}} \phi_{k,j}\\
++ \sum_{k=1}^{N-1}\phi_{i,k}(DY^{2})^{T}_{k,j}
+-\sum_{k=1}^{N-1}\frac{DY^{T}_{NN}DY^{T}_{k0}-DY^{T}_{N0}DY^{T}_{kN}}
+{DY^{T}_{00}DY^{T}_{NN}-DY^{T}_{0N}DY^{T}_{N0}}(DY^{2})^{T}_{0,j}\\
+-\sum_{k=1}^{N-1}\phi_{i,k}\frac{DY^{T}_{0N}DY^{T}_{k0}-DY^{T}_{00}DY^{T}_{kN}}
+{DY^{T}_{0N}DY^{T}_{N0}-DY^{T}_{00}DY^{T}_{NN}}(DY^{2}_{N,j})\\
+= \frac{1}{4}RHS_{i,j}
+\end{align}
+
+\item[step 5:] finally correct the pressure field on the entire domain
+and update velocity on the entire  domain.\\
+\begin{align}
+p^{n+1}={p}^{*} + \frac{3}{2\delta t}\phi  \\
+\vec{u}^{n+1} = \vec{u}^{*} - \nabla \phi
+\end{align}
+
+\end{description}
+\bibliography{final_project.bib}
+\bibliographystyle{plain}
+\end{document}
