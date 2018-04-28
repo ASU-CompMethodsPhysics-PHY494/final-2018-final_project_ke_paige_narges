@@ -1,0 +1,13 @@
+Re1000_Ri0.10_M64     # filename
+64                    # number of grids on x direction 
+64                    # number of grids on y direction
+1000                  # Reynolds number
+0.01                  # Richardson number
+2                     # aspect ratio
+1.0d-3                # time step
+10000                 # total time iterations
+10                    # its write time series every its time steps
+1000                  # igraph write restart every igraph time steps
+0                     # ibegin =0 start with 0 initial condition 
+                      #        =1 continue restart and keep t
+                      #        =2 continue restart with different parameters 
