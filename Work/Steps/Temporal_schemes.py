@@ -208,8 +208,10 @@ def LHS_Z(D):
     tDk0 = tD[0,1:-1]
 
     ## Helmoltz constants
-    A = ( D2ik - D2im * ((Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) - D2i0 * ((Dmm*D0k - D0m*Dmk)/(D00*Dmm - Dm0*D0m))  )
-    B = ( tD2kj - ((tDmm*tDk0 - tDm0*tDkm)/(tD00*tDmm - tD0m*tDm0)) * tD20j - ((tD0m*tDk0 - tD00*tDkm)/(tD0m*tDm0 - tD00*tDmm))*tD2mj  )
+    A = ( D2ik - D2im * ((Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) \
+        - D2i0 * ((Dmm*D0k - D0m*Dmk)/(D00*Dmm - Dm0*D0m))  )
+    B = ( tD2kj - ((tDmm*tDk0 - tDm0*tDkm)/(tD00*tDmm - tD0m*tDm0)) * tD20j\
+        - ((tD0m*tDk0 - tD00*tDkm)/(tD0m*tDm0 - tD00*tDmm))*tD2mj  )
 
     return A,B,C
 
@@ -221,3 +223,108 @@ def PUV(D, P, U, V, Z):
     V2 = V  - cont.asp * Z * tD
 
     return P2, U2, V2
+
+def boundary_values(M,N,Re)
+  boudary_u = np.zeros([M+1,N+1])
+  boudary_u[:,0] = Re
+  boudary_v = 0.0
+  boudary_T = np.zeros([M+1,M+1])
+  boudary_T[:,0] = 0.5
+  boudary_T[:,N] =-0.5
+
+def eigens_P(M,N,asp,D,D2,TD,TD2):
+  eign_vec_P1  = np.array([M-1,M-1])
+  eigen_val_P1 = np.array([M-1])
+  eign_vec_P2  = np.array([N-1,N-1])
+  eigen_val_P2 = np.array([N-1])
+  tempx = np.array([M-1,M-1])
+  tempy = np.array([N-1,N-1])
+  
+  D00_MM_DM0_0M   = D[0,0]*D[M,M]   - D[M,0]*D[0,M]
+  TD00_NN_TD0N_N0 = TD[0,0]*TD[N,N] - TD[0,N]*TD[N,N] 
+  for i in range(M+1): # generate the coefficient matrix column-wise
+    tempx[i,1:M-1] =-D2[i,0] * (D[M,M]*D[0,1:M-1]-D[0,M]*D[M,1:M-1])/D00_MM_DM0_0M \
+                    +D2[i,M] * (D[M,0]*D[0,1:M-1]-D[0,0]*D[M,1:M-1])/D00_MM_DM0_0M 
+  tempx = asp**2 * (D2[1:M-1,1:N-1] - tempx)
+  for k in range(M+1): # generate the coefficient matrix row-wise
+    tempy[1:M-1,j] = -TD2[0,j] * (TD[N,N]*DT[1:M-1,0] - TD[N,0]*TD[1:M-1,N])/TD00_NN_TD0N_N0 \
+                     +TD2[N,j] * (TD[0,N]*TD[1:M-1,0] - TD[0,0]*TD[1:M-1,N])/TD00_NN_TD0N_N0
+  tempy = 4.0 * (TD2[1:M-1,1:M-1] - tempy)
+  eigen_vector1, eigen_value1 = np.linalg.eig(tempx)
+  eigen_vector2, eigen_value2 = np.linalg.eig(tempy)
+
+  return eigen_vec_P1, eigen_val_P1, eigen_vec_P2, eigen_val_P2
+
+def eigens_T(M,N,asp,D,D2,TD,TD2):
+  eign_vec_T1  = np.array([M-1,M-1])
+  eigen_val_T1 = np.array([M-1])
+
+  eign_vec_T2  = np.array([N-1,N-1])
+  eigen_val_T2 = np.array([N-1])
+  
+  tempx = np.array([M-1,M-1])
+  tempy = np.array([N-1,N-1])
+  
+  D00_MM_DM0_0M   = D[0,0]*D[M,M]   - D[M,0]*D[0,M]
+  TD00_NN_TD0N_N0 = TD[0,0]*TD[N,N] - TD[0,N]*TD[N,N] 
+  for i in range(M+1): # Neumann boundary conditions
+    tempx[i,1:M-1] =-D2[i,0] * (D[M,M]*D[0,1:M-1]-D[0,M]*D[M,1:M-1])/D00_MM_DM0_0M \
+                    +D2[i,M] * (D[M,0]*D[0,1:M-1]-D[0,0]*D[M,1:M-1])/D00_MM_DM0_0M 
+  tempx = asp**2 * (D2[1:M-1,1:N-1] - tempx)
+                       # Dirichlet boundary conditions 
+  tempy = 4.0 * TD2[1:N-1,1:N-1] 
+
+  eigen_vec_T1, eigen_val_T1 = np.linalg.eig(tempx)
+  eigen_vec_T2, eigen_val_T2 = np.linalg.eig(tempy)
+
+  return eigen_vec_T1, eigen_val_T1, eigen_vec_T2, eigen_val_T2
+
+def eigens_vel(M,N,asp,D,D2,TD,TD2):
+  eign_vec_vel1  = np.array([M-1,M-1])
+  eigen_val_vel1 = np.array([M-1])
+  eign_vec_vel2  = np.array([N-1,N-1])
+  eigen_val_vle2 = np.array([N-1])
+  tempx = np.array([M-1,M-1])
+  tempy = np.array([N-1,N-1])
+  
+  D00_MM_DM0_0M   = D[0,0]*D[M,M]   - D[M,0]*D[0,M]
+  TD00_NN_TD0N_N0 = TD[0,0]*TD[N,N] - TD[0,N]*TD[N,N] 
+  # Dirichelt bounday condition for both directions
+  tempx = asp**2 * D2[1:M-1,1:N-1] 
+  tempy = 4.0   * TD2[1:N-1,1:N-1] 
+  eigen_vec_vel1, eigen_val_vel1 = np.linalg.eig(tempx)
+  eigen_vec_vel2, eigen_val_vel2 = np.linalg.eig(tempy)
+
+  return eigen_vec_vel1, eigen_val_vel1, eigen_vec_vel2, eigen_val_vel2
+
+def eigens_phi(M,N,asp,D,D2,TD,TD2):
+  eign_vec_phi1  = np.array([M-1,M-1])
+  eigen_val_phi1 = np.array([M-1])
+  eign_vec_phi2  = np.array([N-1,N-1])
+  eigen_val_phi2 = np.array([N-1])
+  tempx = np.array([M-1,M-1])
+  tempy = np.array([N-1,N-1])
+  
+  D00_MM_DM0_0M   = D[0,0]*D[M,M]   - D[M,0]*D[0,M]
+  TD00_NN_TD0N_N0 = TD[0,0]*TD[N,N] - TD[0,N]*TD[N,N] 
+  for i in range(M+1): # generate the coefficient matrix column-wise
+    tempx[i,1:M-1] =-D2[i,0] * (D[M,M]*D[0,1:M-1]-D[0,M]*D[M,1:M-1])/D00_MM_DM0_0M \
+                    +D2[i,M] * (D[M,0]*D[0,1:M-1]-D[0,0]*D[M,1:M-1])/D00_MM_DM0_0M 
+  tempx = asp**2 * (D2[1:M-1,1:N-1] - tempx)
+  for k in range(M+1): # generate the coefficient matrix row-wise
+    tempy[1:M-1,j] = -TD2[0,j] * (TD[N,N]*DT[1:M-1,0] - TD[N,0]*TD[1:M-1,N])/TD00_NN_TD0N_N0 \
+                     +TD2[N,j] * (TD[0,N]*TD[1:M-1,0] - TD[0,0]*TD[1:M-1,N])/TD00_NN_TD0N_N0
+  tempy = 4.0 * (TD2[1:M-1,1:M-1] - tempy)
+  eigen_vec_phi1, eigen_val_phi1 = np.linalg.eig(tempx)
+  eigen_vec_phi2, eigen_val_phi2 = np.linalg.eig(tempy)
+
+  return eigen_vec_phi1, eigen_val_phi1, eigen_vec_phi2, eigen_val_phi2
+
+
+
+
+
+
+
+
+
