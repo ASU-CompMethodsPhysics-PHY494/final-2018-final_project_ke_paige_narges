@@ -61,7 +61,8 @@ def LHS_T(D):
     D0k = D[0,1:-1]
 
     ## Helmoltz constants
-    A = D2ik + (D2i0 *(Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) + (D2im*(Dmm*D0k - D0m*Dmk)/(D00*D0m - Dm0*D0m))
+    A = D2ik + (D2i0 *(Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) + \
+       (D2im*(Dmm*D0k - D0m*Dmk)/(D00*D0m - Dm0*D0m))
     B = tD2kj
     C = 3*(1/(2*cont.h))
 
@@ -79,7 +80,9 @@ def RHS_P(U1,V1,T1,U0,V0,T0,D,Tm0,Tmm,T2):
     tD20j = tD2[0,:]
     tD2mj = tD2[-1,:]
 
-    RHSP = cont.asp*D*(-2*NL(U1,V1,U1,D) + NL(U0,V0,U0,D)) + cont.asp*((-2*NL(U1,V1,V1,D) + NL(U0,V0,V0,D) + cont.Gr*T2)*np.transpose(D)
+    RHSP = cont.asp*D*(-2*NL(U1,V1,U1,D) + NL(U0,V0,U0,D)) + \
+           cont.asp*((-2*NL(U1,V1,V1,D) + NL(U0,V0,V0,D) + \
+           cont.Gr*T2)*np.transpose(D)
     RHSP -= cont.asp**2*(D2i0 + D2im + tD20j + tD2mj)
 
     return RHSP
@@ -119,8 +122,10 @@ def LHS_P(D):
     tDk0 = tD[0,1:-1]
 
     ## Helmoltz constants
-    A = cont.aps**2*( D2ik - D2im * ((Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) - D2i0 * ((Dmm*D0k - D0m*Dmk)/(D00*Dmm - Dm0*D0m))  )
-    B = cont.aps**2*( tD2kj - ((tDmm*tDk0 - tDm0*tDkm)/(tD00*tDmm - tD0m*tDm0)) * tD20j - ((tD0m*tDk0 - tD00*tDkm)/(tD0m*tDm0 - tD00*tDmm))*tD2mj  )
+    A = cont.aps**2*( D2ik - D2im * ((Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) -\
+        D2i0 * ((Dmm*D0k - D0m*Dmk)/(D00*Dmm - Dm0*D0m))  )
+    B = cont.aps**2*( tD2kj - ((tDmm*tDk0 - tDm0*tDkm)/(tD00*tDmm - tD0m*tDm0)) * tD20j \
+        - ((tD0m*tDk0 - tD00*tDkm)/(tD0m*tDm0 - tD00*tDmm))*tD2mj  )
 
     return A,B
 
@@ -319,6 +324,28 @@ def eigens_phi(M,N,asp,D,D2,TD,TD2):
   eigen_vec_phi2, eigen_val_phi2 = np.linalg.eig(tempy)
 
   return eigen_vec_phi1, eigen_val_phi1, eigen_vec_phi2, eigen_val_phi2
+
+def Helmholtz_sovler(M,N,sigma,eig_val1,eig_vec1,eig_val2,eig_vec2,H):
+  tol = 1e-10
+  tempH = np.linalg.solve(eig_vec1,H)
+  tempH = np.matmul(tempH,eig_vec2)
+
+  for j in range(N):
+    for i in range(M):
+      if abs(eig_val1(i))<tol and abs(eig_val2(j))<tol and abs(sigma)<tol:
+        X[i,j] = 0.0
+      else:
+        X[i,j] = tempH[i,j]/(eig_val1[i]+eig_val2[j]+sigma)
+
+  tempX = np.linalg.solve(np.transpose(eig_vec2,np.transpose(X)))
+  tempX = np.transpose(tempX)
+  X = np.matmul(eig_vec1,tempX)
+  
+  return X
+         
+          
+
+
 
 
 
