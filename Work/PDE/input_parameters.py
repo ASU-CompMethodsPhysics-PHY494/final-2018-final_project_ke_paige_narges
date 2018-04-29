@@ -8,3 +8,4 @@ num_steps=10000                 # total time iterations
 its   = 1                    # its write time series every its time steps
 igraph=1000                  # igraph write restart every igraph time steps
 ibegin= 0                     # ibegin =0 start with 0 initial condition
+Pr = 1
