@@ -412,7 +412,29 @@ def Velocity(M,N,dt,Gr,P,u,uold,v,vold,Tnew,D,D2,TD,TD2,eig_valv1,eig_vecv1,eig_
     Unew(0,:) = u0(0,:);  Vnew(0,:) = v0(0,:)
     Unew(N,:) = u0(N,:);  Vnew(N,:) = v0(N,:)
     return Unew, Vnew
-                     
+
+def correction(M,N,Unew,Vnew,P,D,TD,D2,TD2,eig_val_phi1,eig_vec_phi1,eig_val_phi2,eig_vec_phi2)
+    RHS=np.zeros(M+1,N+1)
+    RHS=np.matmul(D,Unew) +np.matmul(Vnew,TD)
+    phi=np.zeros(M+1,N+1)
+    sigma=0.0
+    phi[1:M,1:N]=Helmholtz_solver(M,N,sigma,eig_val_phi1,eig_vec_phi1,eig_val_phi2,eig_vec_phi2,RHS[1:M,1:N])
+    # define c1, c2, c3, c4
+    for j in range(1,M):  # update the boundary of phi
+        phi(N,j] = -np.dot(D[M,0]*D[0,1:M]-D[0,0]*D[M,1:M],phi[1:M,j]) /c1
+        phi[0,j] = -np.dot(D(N,N)*D[0,1:N]-D[0,N]*D[N,1:N],phi[1:M,j]) /c2
+
+    for j in range(1,M):
+        phi(j,M) = -np.dot(phi[j,1:M], TD[0,M]*TD[1:M,0]-TD[0,0]*TD[1:M,M]) /c3
+        phi(j,0) = -np.dot(phi[j,1:M], TD[M,M]*TD[1:M,0]-TD[M,0]*TD[1:M,M]) /c4
+
+    P    = P + 3/(4*dt)*phi
+    Unew = Unew - np.matmul(D,phi)
+    Vnew = Vnew - np.matmul(phi,TD)
+    
+    return Unew, Vnew, P
+            
+
                      
 
     
