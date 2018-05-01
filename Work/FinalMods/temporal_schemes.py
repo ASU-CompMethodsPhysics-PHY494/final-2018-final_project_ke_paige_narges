@@ -50,17 +50,29 @@ def RHS_T(U0,V0,T0,U1,V1,T1):
 
     return RHST
 
-def LHS_T():
+def eigens_T():
+    eigen_vec_T1  = np.zeros([cont.M+1,cont.M+1])
+    eigen_val_T1 = np.zeros([cont.M+1])
+    eigen_vec_T2  = np.zeros([cont.N+1,cont.N+1])
+    eigen_val_T2 = np.zeros([cont.N+1])
+    tempx = np.zeros([cont.M+1,cont.M+1])
+    tempy = np.zeros([cont.N+1,cont.N+1])
+    
+    D00_MM_DM0_0M   = D[0,0]*D[cont.M,cont.M]   - D[cont.M,0]*D[0,cont.M]
+    TD00_NN_TD0N_N0 = TD[0,0]*TD[cont.N,cont.N] - TD[0,cont.N]*TD[cont.N,cont.N] 
+    
+    for i in range(1,cont.M): # Neumann boundary conditions
+        tempx[i,1:cont.M] =-D2[i,0] * (D[cont.M,cont.M]*D[0,1:cont.M]-D[0,cont.M]*D[cont.M,1:cont.M])/D00_MM_DM0_0M \
+                    +D2[i,cont.M] * (D[cont.M,0]*D[0,1:cont.M]-D[0,0]*D[cont.M,1:cont.M])/D00_MM_DM0_0M 
+    tempx[1:cont.M,1:cont.M] = cont.asp**2 * (D2[1:cont.M,1:cont.M] - tempx[1:cont.M,1:cont.M])
+                       # Dirichlet boundary conditions 
+   
+    tempy[1:cont.N,1:cont.N] = cont.asp**2 * TD2[1:cont.N,1:cont.N] 
+    
+    eigen_val_T1[1:cont.M], eigen_vec_T1[1:cont.M,1:cont.M] = np.linalg.eig(tempx[1:cont.M,1:cont.M])
+    eigen_val_T2[1:cont.N]  , eigen_vec_T2[1:cont.N,1:cont.N] = np.linalg.eig(tempy[1:cont.N,1:cont.N] )
 
-    ## Helmoltz constants
-    A = np.empty_like(D2[1:-1,1:-1])
-    for i in range(1,cont.M):
-        A[i-1,:] = cont.asp*cont.asp*(D2[i,1:-1] - D2[i,0] * ((Dmm*D0k - D0m*Dmk)/(D00*Dmm - Dm0*D0m)) - D2[i,-1]*((Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)))
-    B = cont.asp*cont.asp*TD2[1:-1,1:-1]
-    C = 3*(cont.Pr/(2*cont.dt))
-
-    return A,B,C
-
+    return eigen_vec_T1, eigen_val_T1, eigen_vec_T2, eigen_val_T2
 
 ## Step 2 Pressure
 def RHS_P(U0,V0,T0,U1,V1,T1,T2):
@@ -75,18 +87,33 @@ def RHS_P(U0,V0,T0,U1,V1,T1,T2):
 
     return RHSP
 
-def LHS_P():
-
-    ## Helmoltz constants
-    A = np.empty_like(D2[1:-1,1:-1])
-    B = np.empty_like(D2[1:-1,1:-1])
-    for i in range(1,cont.M-1):
-        A[i-1,:] = cont.asp*cont.asp*( D2[i,1:-1] - D2[i,-1]* ((Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) - D2[i,0] * ((Dmm*D0k - D0m*Dmk)/(D00*Dmm - Dm0*D0m))  )
-        B[:,i-1] = cont.asp*cont.asp*( TD2[1:-1,i] - ((TDmm*TDk0 - TDm0*TDkm)/(TD00*TDmm - TD0m*TDm0)) * TD2[0,i] - ((TD0m*TDk0 - TD00*TDkm)/(TD0m*TDm0 - TD00*TDmm))*TD2[-1,i]  )
-    C = 0
-
-    return A,B,C
-
+def eigens_P():
+    eigen_vec_P1  = np.zeros([cont.M+1,cont.M+1])
+    eigen_val_P1 = np.zeros([cont.M+1])
+    eigen_vec_P2  = np.zeros([cont.N+1,cont.N+1])
+    eigen_val_P2 = np.zeros([cont.N+1])
+    tempx = np.zeros([cont.M+1,cont.M+1])
+    tempy = np.zeros([cont.N+1,cont.N+1])
+  
+    D00_MM_DM0_0M   = D[0,0]*D[cont.M,cont.M]   - D[cont.M,0]*D[0,cont.M]
+    TD00_NN_TD0N_N0 = TD[0,0]*TD[cont.N,cont.N] - TD[0,cont.N]*TD[cont.N,0]
+    
+    for i in range(cont.M): # generate the coefficient matrix column-wise
+        tempx[i,1:cont.M] = -D2[i,0] * (D[cont.M,cont.M]*D[0,1:cont.M]-D[0,cont.M]*D[cont.M,1:cont.M])/D00_MM_DM0_0M \
+                          + D2[i,cont.M] * (D[cont.M,0]*D[0,1:cont.M]-D[0,0]*D[cont.M,1:cont.M])/D00_MM_DM0_0M 
+    tempx[1:cont.M,1:cont.N] = (D2[1:cont.M,1:cont.N] + tempx[1:cont.M,1:cont.N])
+    ##tempx[1:cont.M,1:cont.N] = cont.asp**2*(D2[1:cont.M,1:cont.N] + tempx[1:cont.M,1:cont.N])
+    
+    for j in range(cont.M): # generate the coefficient matrix column-wise
+        tempy[1:cont.N,j] = np.asarray(np.transpose(-(TD2[0,j] * (TD[cont.N,cont.N]*TD[1:cont.N,0]-TD[cont.N,0]*TD[1:cont.N,cont.N])/TD00_NN_TD0N_N0) \
+                          + (TD2[cont.N,j] * (TD[0,cont.N]*TD[1:cont.N,0]-TD[0,0]*TD[1:cont.N,cont.N])/TD00_NN_TD0N_N0)))
+    tempy[1:cont.M,1:cont.N] = (TD2[1:cont.M,1:cont.N] + tempy[1:cont.M,1:cont.N])
+    ##tempy[1:cont.M,1:cont.N] = cont.asp**2*(TD2[1:cont.M,1:cont.N] + tempy[1:cont.M,1:cont.N])
+    
+    eigen_val_P1[1:cont.M], eigen_vec_P1[1:cont.M,1:cont.M] = np.linalg.eig(tempx[1:cont.M,1:cont.M])
+    eigen_val_P2[1:cont.N], eigen_vec_P2[1:cont.N,1:cont.N] = np.linalg.eig(tempy[1:cont.N,1:cont.N])
+    
+    return eigen_val_P1, eigen_vec_P1, eigen_val_P2, eigen_vec_P2
 
 ## step 3
 def RHS_U(U0,V0,T0,U1,V1,T1,T2,P):
@@ -101,36 +128,57 @@ def RHS_U(U0,V0,T0,U1,V1,T1,T2,P):
 
     return RHSU, RHSV
 
+def eigens_vel():
+    eigen_vec_vel1  = np.zeros([cont.M,cont.M+1])
+    eigen_val_vel1 = np.zeros([cont.M+1])
+    eigen_vec_vel2  = np.zeros([cont.N+1,cont.N+1])
+    eigen_val_vel2 = np.zeros([cont.N+1])
+    tempx = np.zeros([cont.M+1,cont.M+1])
+    tempy = np.zeros([cont.N+1,cont.N+1])
 
-def LHS_U():
+    tempx[1:cont.M,1:cont.N]  = D2[1:cont.M,1:cont.N] 
+    tempy[1:cont.N,1:cont.N]  =  TD2[1:cont.N,1:cont.N] 
 
-    ## Helmoltz constants
-    A = D2[1:-1,1:-1]
-    B = TD2[1:-1,1:-1]
-    C = 3*(cont.Pr/(2*cont.dt))
+    eigen_val_vel1[1:cont.M], eigen_vec_vel1[1:cont.M,1:cont.M] = np.linalg.eig(tempx[1:cont.M,1:cont.M])
+    eigen_val_vel2[1:cont.N], eigen_vec_vel2[1:cont.N,1:cont.N] = np.linalg.eig(tempy[1:cont.N,1:cont.N] )
 
-    return A,B,C
-
+    return eigen_vec_vel1, eigen_val_vel1, eigen_vec_vel2, eigen_val_vel2
 
 ## step 4
-def RHS_Z(U, V):
+def RHS_phi(U, V):
 
     RHSZ = cont.asp*(D*U + V*TD)
     RHSZ *= 0.25
 
     return RHSZ
 
-def LHS_Z():
-
-    ## Helmoltz constants
-    A = np.empty_like(D2[1:-1,1:-1])
-    B = np.empty_like(D2[1:-1,1:-1])
-    ## Helmoltz constants
-    for i in range(1,cont.M):
-        A[i-1,:] = ( D2[i,1:-1] - D2[i,-1] * ((Dm0*D0k - D00*Dmk)/(Dm0*D0m - D00*Dmm)) - D2[i,0] * ((Dmm*D0k - D0m*Dmk)/(D00*Dmm - Dm0*D0m))  )
-        B[:,i-1] = ( TD2[1:-1,i] - ((TDmm*TDk0 - TDm0*TDkm)/(TD00*TDmm - TD0m*TDm0)) * TD2[0,i] - ((TD0m*TDk0 - TD00*TDkm)/(TD0m*TDm0 - TD00*TDmm))*TD2[-1,i]  )
-    C = 0
-    return A,B,C
+def eigens_phi():
+    eigen_vec_phi1  = np.zeros([cont.M+1,cont.M+1])
+    eigen_val_phi1 = np.zeros([cont.M+1])
+    eigen_vec_phi2  = np.zeros([cont.N+1,cont.N+1])
+    eigen_val_phi2 = np.zeros([cont.N+1])
+    tempx = np.zeros([cont.M+1,cont.M+1])
+    tempy = np.zeros([cont.N+1,cont.N+1])
+  
+    D00_MM_DM0_0M   = D[0,0]*D[cont.M,cont.M]   - D[cont.M,0]*D[0,cont.M]
+    TD00_NN_TD0N_N0 = TD[0,0]*TD[cont.N,cont.N] - TD[0,cont.N]*TD[cont.N,0]
+    
+    for i in range(cont.M): # generate the coefficient matrix column-wise
+        tempx[i,1:cont.M] = -D2[i,0] * (D[cont.M,cont.M]*D[0,1:cont.M]-D[0,cont.M]*D[cont.M,1:cont.M])/D00_MM_DM0_0M \
+                          + D2[i,cont.M] * (D[cont.M,0]*D[0,1:cont.M]-D[0,0]*D[cont.M,1:cont.M])/D00_MM_DM0_0M 
+    tempx[1:cont.M,1:cont.N] = (D2[1:cont.M,1:cont.N] + tempx[1:cont.M,1:cont.N])
+    ##tempx[1:cont.M,1:cont.N] = cont.asp**2*(D2[1:cont.M,1:cont.N] + tempx[1:cont.M,1:cont.N])
+    
+    for j in range(cont.M): # generate the coefficient matrix column-wise
+        tempy[1:cont.N,j] = np.asarray(np.transpose(-(TD2[0,j] * (TD[cont.N,cont.N]*TD[1:cont.N,0]-TD[cont.N,0]*TD[1:cont.N,cont.N])/TD00_NN_TD0N_N0) \
+                          + (TD2[cont.N,j] * (TD[0,cont.N]*TD[1:cont.N,0]-TD[0,0]*TD[1:cont.N,cont.N])/TD00_NN_TD0N_N0)))
+    tempy[1:cont.M,1:cont.N] = (TD2[1:cont.M,1:cont.N] + tempy[1:cont.M,1:cont.N])
+    ##tempy[1:cont.M,1:cont.N] = cont.asp**2*(TD2[1:cont.M,1:cont.N] + tempy[1:cont.M,1:cont.N])
+    
+    eigen_val_phi1[1:cont.M], eigen_vec_phi1[1:cont.M,1:cont.M] = np.linalg.eig(tempx[1:cont.M,1:cont.M])
+    eigen_val_pih2[1:cont.N], eigen_vec_phi2[1:cont.N,1:cont.N] = np.linalg.eig(tempy[1:cont.N,1:cont.N])
+    
+    return eigen_val_phi1, eigen_vec_phi1, eigen_val_phi2, eigen_vec_phi2
 
 ## step 5
 def PUV(P, U, V, Z):
