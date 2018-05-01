@@ -344,15 +344,82 @@ def T(M,N,Pr,dt,TD2,NLT_old,NLT,Told,T,eig_vecT1,eig_valT1,eig_vecT2,eig_valT2):
     Tnew = np.zeros([M+1,N+1])
     rhs  = np.zeros([M+1,N+1])
     rhs  = Pr*( 2.0*NLT - NLT_old - (4.0*T-Told)/(2.0*dt) )
-    for j in range(M-2):
-	for i in range(N-2):  # the top and bot boundaries of T are given
-	    rhs[j+1,i+1] = rhs[i+1,j+1] - 4.0*Tnew[i+1,0]*TD2[0,j+1] \
-					 -4.0*Tnew[i+1,N]*TD2[N,j+1]
+    for j in range(1,M):
+        for i in range(1,N):  # the top and bot boundaries of T are given
+            rhs[i,j] = rhs[i,j] - 4.0*Tnew[i,0]*TD2[0,j] - 4.0*Tnew[i,N]*TD2[N,j]
     sigma= 3.0*Pr/(2.0*dt)
-    Tnew[1:M-1,1:N-1]=Helmholtz_solver(M,N,sigma,eig_valT1,eig_vecT1,eig_valT2,eig_vecT2,rhs[1:M-1,1:N-1])
+    Tnew[1:M,1:N]=Helmholtz_solver(M,N,sigma,eig_valT1,eig_vecT1,eig_valT2,eig_vecT2,rhs[1:M,1:N])
+    for j in range(1,M)      # c1 and c2 need to be defined
+        Tnew[0,j] = np.dot(D[M,0]*D[0,1:M]-D[0,0]*D[M,1:M],Tnew[1:M,j])/c1
+        Tnew[-1,j]= np.dot(D[M,M]*D[0,1:M]-D[0,M]*D[M,1:M],Tnew[1:M,j])/c2
+  # update top and bottom boundaries                                   
     return Tnew
 
-def Pressure(M,N,dt,)
+def Pressure(M,N,dt,Gr,u,uold,v,vold,Tnew,D,D2,TD,TD2,eig_valP1,eig_vecP1,eig_valP2,eig_vecP2,\
+             NLU,NLUold,NLV,NLVold,LU,LV,LUold,LVold,U0,V0)
+    RHS = np.zeros(M+1,N+1)
+    rhs1= np.zeros(M+1,N+1)
+    rhs2= np.zeros(M+1,M+1)
+    RHS = asp*np.matmul(D,-2*NLU+NLUold,) + asp*np.matmul(-2*NLV+NLVold+Gr*Tnew,TD)
+    rhs1[0,:] =(-3*u0[0,:]+4*u[0,:]-uold[0,:]) / (2.0*dt) \
+                -2*NLU[0,:]+NLUold[0,:] +2*LU[0,:]-LUold[0,:]
+    rhs1[-1,:]=(-3*u0[-1,:]+4*u[-1,:]-uold[-1,:]) / (2.0*dt) \
+                -2*NLU[-1,:]+NLUold[-1,:] +2*LU[-1,:]-LUold[-1,:]
+    rhs2[:,0] =(-3*v0[:,0]+4*v[:,0]-vold[:,0]) / (2.0*dt) \
+                -2*NLV[0,:] +NLVold[:,0]  +2*LV[:,0]-LVold[:,0] + Gr*Tnew[:,0]
+    rhs2[:,-1]=(-3*v0[:,-1] +4*v[:,-1]-uold[:,-1]) / (2.0*dt) \
+                -2*NLV[:,-1]+NLVold[:,-1] +2*LU[:,-1]-LVold[:,-1] + Gr*Tnew[:,-1]
+    for j in range(1,M):  # c1,c2,c3,c4 need to be defined
+        RHS[:,j] = RHS[:,j]-asp*D2[:,0] *(D(M,N)*rhs1[0,j] -D[0,M]*rhs1[M,j] ) / c2 \
+                          -asp*D2[:,M]  *(D[M,0]*rhs1[0,j] -D[0,0]*rhs1[N,j] ) / c1 \
+                          -2*TD2[0,j]  *(TD[M,M]*rhs2[:,0] -TD[M,0]*rhs2[:,M] )/ c4 \
+                          -2*TD2[M,j]  *(TD[0,M]*rhs2[:,0] -TD[0,0]*rhs2[:,M] )/ c3
+    sigma=0.0
+    P=0.0
+    P[1:M,1:N]=Helmholtz_solver(M,N,sigma,eig_valP1,eig_vecP1,eig_valP2,eig_vecP2,RHS[1:M,1:N])
+    for j in range(0,M+1): 
+        p[M,j]=((D[M,0]*rhs1[0,j]- D[0,0]*rhs1[M,j]) /
+                 -np.dot(D[N,0]*D[0,1:N]-D[0,0]*D[N,1:N], P[1:M,j])) / c1
+     
+        p[0,j]=((D(M,M)*rhs1[0,j]- D[0,M]*rhs1(M,j)) /
+                 -np.dot(D(M,M)*D[0,1:N]-D[0,M]*D(M,1:M), P[1:M,j])) / c2
+
+    for i in range(0,M+1):
+        P[i,M]=((TD[0,M]*rhs2[i,0]-TD[0,0]*rhs2[i,M]) / 
+                 -np.dot(TD[0,M]*TD[1:M,0]-TD[0,0]*TD[1:M,M], P[i,1:M])/c3
+
+        P[i,0]=((TD[M,M]*rhs2[i,0]-TD[M,0]*rhs2[i,M]) /
+                 -np.dot(TD[M,M]*TD[1:M,0]-TD[M,0]*TD[1:M,M], P[i,1:M]))/c4                     
+    return p
+
+def Velocity(M,N,dt,Gr,P,u,uold,v,vold,Tnew,D,D2,TD,TD2,eig_valv1,eig_vecv1,eig_valv2,eig_vecv2,\
+             NLU,NLUold,NLV,NLVold,U0,V0)
+                
+    rhs1 =(asp*np.matmul(D,P) +2*NLU -NLU_old -(4*U-Uold)/(2*dt))
+    rhs2 =(2*np.matmul(P,TD)  +2*NLV -NLV_old -(4*V-Vold)/(2*dt)) - Gr*Tnew)
+
+    for j in range(1,N):
+        rhs1[:,j]=rhs1[:,j] -D2[:,0] *u0[0,j] -D2[:,N]*u0[N,j] /
+                            -u0[:,0] *TD2[0,j]-u0[:,M]*TD2[M,j]
+        rhs2[:,j]=rhs2[:,j] -D2[:,0] *v0[0,j] -D2[:,N]*v0[N,j] /
+                            -v0[:,0] *TD2[0,j]-v0[:,M]*TD2[M,j]
+    sigma = 3.0/(2*dt)
+    Unew[1:M,1:N]=Helmholtz_solver(M,N,sigma,eig_valv1,eig_vecv1,eig_valv2,eig_vecv2,rhs1[1:M,1:N])
+    Vnew[1:M,1:N]=Helmholtz_solver(M,N,sigma,eig_valv1,eig_vecv1,eig_valv2,eig_vecv2,rhs2[1:M,1:N])
+# impose exact boundary velocity    
+    Unew(:,0) = u0(:,0);  Vnew(:,0) = v0(:,0)
+    Unew(:,M) = u0(:,M);  Vnew(:,M) = v0(:,N)
+    Unew(0,:) = u0(0,:);  Vnew(0,:) = v0(0,:)
+    Unew(N,:) = u0(N,:);  Vnew(N,:) = v0(N,:)
+    return Unew, Vnew
+                     
+                     
+
+    
+    
+                     
+                     
+    
 
     
     
