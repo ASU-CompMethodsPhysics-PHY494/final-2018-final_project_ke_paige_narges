@@ -1,5 +1,19 @@
-Title of the final project
+Complex dynamics in a stratified lid-driven cavity flow
 
-author 1, author 2, author 3
+Paige Weisman, Narges, Ke Wu
 
-Text of the abstract. It should not be longer than 200 words. Describe concisely what the problem is that you want to solve, what approach/methods you used (but keep it at a high level, don't write what you called your functions etc), and what your results are. Keep it all one paragraph. The idea is that a reader should be able to understand in 2 minutes or less what you are doing, how you are doing it, and what you get. Finish with one sentence on conclusions or future work. Finally include a statement along the following lines: Code is available at <URL> [under <LICENSE>]. --- Licensing is  optional, see https://github.com/blog/1530-choosing-an-open-source-license which will send you to http://choosealicense.com/. REPLACE ALL THE TEXT IN THIS ABSTRACT WITH YOUR OWN TITLE, AUTHOR NAMES AND ABSTRACT. THEN COMMIT AND PUT "added abstract" IN THE COMMIT MESSAGE.
+The dynamic response to shear of a 
+fluid-filled square cavity with stable temperature
+stratification is investigated numerically. The shear is imposed by a constant
+velocity on the top lid, whichi is quantified by associated Reynolds
+number Re=2750. The stratification, quantified by a Richardson number, 
+is imposed by maintaining the temperature
+of the top lid at a higher constant temperature than that of the bottom, and
+the sidewalls are insulating. The Navier-Stokes equations under the Boussinesq approximation
+are solved, using a pseudospectral collocation method, over a wide range
+ofvRichardson numbers. Particular attention is paid to the dynamical mechanisms associated
+with the onset of instability of steady state solutions, and to the complex and
+rich dynamics occurring beyond.
+
+Code is available at 
+<https://github.com/ASU-CompMethodsPhysics-PHY494/final-2018-final_project_ke_paige_narges/tree/master/src> .
