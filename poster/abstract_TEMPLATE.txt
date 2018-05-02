@@ -5,13 +5,13 @@ Paige Weisman, Narges, Ke Wu
 The dynamic response to shear of a 
 fluid-filled square cavity with stable temperature
 stratification is investigated numerically. The shear is imposed by a constant
-velocity on the top lid, whichi is quantified by associated Reynolds
+velocity on the top lid, which is quantified by associated Reynolds
 number Re=2750. The stratification, quantified by a Richardson number, 
 is imposed by maintaining the temperature
 of the top lid at a higher constant temperature than that of the bottom, and
 the sidewalls are insulating. The Navier-Stokes equations under the Boussinesq approximation
 are solved, using a pseudospectral collocation method, over a wide range
-ofvRichardson numbers. Particular attention is paid to the dynamical mechanisms associated
+of Richardson numbers. Particular attention is paid to the dynamical mechanism associated
 with the onset of instability of steady state solutions, and to the complex and
 rich dynamics occurring beyond.
 
