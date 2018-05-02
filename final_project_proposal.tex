@@ -430,17 +430,17 @@ Express the boundary values of $\phi$ in terms interior points values by the Neu
 \end{align}
 Plug in the boundary condition into the above equation, we can form the linear system for the $\phi$ equation.
 \begin{align}
-\sum_{k=1}^{M-1}DX^{2}_{i,k}\phi_{k,j}
-+DX^{2}_{i,0}\sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
+  asp^{2}\sum_{k=1}^{M-1}DX^{2}_{i,k}\phi_{k,j}
+  -asp^{2}DX^{2}_{i,0}\sum_{k=1}^{M-1}\frac{DX_{MM}DX_{0k}-DX_{0M}DX_{Mk}}
 {DX_{00}DX_{MM}-DX_{M0}DX_{0M}} \phi_{k,j} \\
-+DX^{2}_{i,M}\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
+  -asp^{2}DX^{2}_{i,M}\sum_{k=1}^{M-1}\frac{DX_{M0}DX_{0k}-DX_{00}DX_{Mk}}
 {DX_{M0}DX_{0M}-DX_{00}DX_{MM}} \phi_{k,j}\\
-+ \sum_{k=1}^{N-1}\phi_{i,k}(DY^{2})^{T}_{k,j}
--\sum_{k=1}^{N-1}\frac{DY^{T}_{NN}DY^{T}_{k0}-DY^{T}_{N0}DY^{T}_{kN}}
+  + asp^{2}\sum_{k=1}^{N-1}\phi_{i,k}(DY^{2})^{T}_{k,j}
+  -asp^{2}\sum_{k=1}^{N-1}\frac{DY^{T}_{NN}DY^{T}_{k0}-DY^{T}_{N0}DY^{T}_{kN}}
 {DY^{T}_{00}DY^{T}_{NN}-DY^{T}_{0N}DY^{T}_{N0}}(DY^{2})^{T}_{0,j}\\
--\sum_{k=1}^{N-1}\phi_{i,k}\frac{DY^{T}_{0N}DY^{T}_{k0}-DY^{T}_{00}DY^{T}_{kN}}
+  -asp^{2}\sum_{k=1}^{N-1}\phi_{i,k}\frac{DY^{T}_{0N}DY^{T}_{k0}-DY^{T}_{00}DY^{T}_{kN}}
 {DY^{T}_{0N}DY^{T}_{N0}-DY^{T}_{00}DY^{T}_{NN}}(DY^{2}_{N,j})\\
-= \frac{1}{4}RHS_{i,j}
+= RHS_{i,j}
 \end{align}
 
 \item[step 5:] finally correct the pressure field on the entire domain
